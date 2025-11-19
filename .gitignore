@@ -1,0 +1,12 @@
+dataset/
+saved_models/
+logs/
+__pycache__/
+.ipynb_checkpoints/
+*.h5
+*.ckpt
+*.zip
+*.png
+*.jpg
+*.csv
+.DS_Store
