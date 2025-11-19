@@ -1,0 +1,15 @@
+# Core ML Libraries
+tensorflow==2.15.0
+numpy
+pandas
+matplotlib
+scikit-learn
+opencv-python
+tqdm
+
+# Model Saving / Loading Support
+h5py
+
+# Visualization & Demo (Notebook)
+Pillow
+tensorboard
