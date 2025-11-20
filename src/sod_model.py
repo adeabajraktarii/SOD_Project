@@ -2,40 +2,50 @@ import tensorflow as tf
 from tensorflow.keras import layers, models
 
 def conv_block(x, filters):
-    x = layers.Conv2D(filters, 3, padding='same', activation='relu')(x)
-    x = layers.Conv2D(filters, 3, padding='same', activation='relu')(x)
+    x = layers.Conv2D(filters, 3, padding='same', use_bias=False)(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
+
+    x = layers.Conv2D(filters, 3, padding='same', use_bias=False)(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
     return x
 
-def build_unet(input_shape=(128, 128, 3)):
+def build_unet(input_shape=(224, 224, 3), base_filters=32, dropout_rate=0.4):
     inputs = layers.Input(input_shape)
 
-    # Encoder
-    c1 = conv_block(inputs, 32)
+    c1 = conv_block(inputs, base_filters)
     p1 = layers.MaxPooling2D()(c1)
 
-    c2 = conv_block(p1, 64)
+    c2 = conv_block(p1, base_filters * 2)
     p2 = layers.MaxPooling2D()(c2)
 
-    c3 = conv_block(p2, 128)
+    c3 = conv_block(p2, base_filters * 4)
     p3 = layers.MaxPooling2D()(c3)
 
-    # Bottleneck
-    bn = conv_block(p3, 256)
+    c4 = conv_block(p3, base_filters * 8)
+    p4 = layers.MaxPooling2D()(c4)
 
-    # Decoder
-    u3 = layers.UpSampling2D()(bn)
+    bn = conv_block(p4, base_filters * 16)
+    bn = layers.Dropout(dropout_rate)(bn)
+
+    u4 = layers.Conv2DTranspose(base_filters * 8, 2, strides=2, padding='same')(bn)
+    u4 = layers.Concatenate()([u4, c4])
+    c5 = conv_block(u4, base_filters * 8)
+
+    u3 = layers.Conv2DTranspose(base_filters * 4, 2, strides=2, padding='same')(c5)
     u3 = layers.Concatenate()([u3, c3])
-    c4 = conv_block(u3, 128)
+    c6 = conv_block(u3, base_filters * 4)
 
-    u2 = layers.UpSampling2D()(c4)
+    u2 = layers.Conv2DTranspose(base_filters * 2, 2, strides=2, padding='same')(c6)
     u2 = layers.Concatenate()([u2, c2])
-    c5 = conv_block(u2, 64)
+    c7 = conv_block(u2, base_filters * 2)
 
-    u1 = layers.UpSampling2D()(c5)
+    u1 = layers.Conv2DTranspose(base_filters, 2, strides=2, padding='same')(c7)
     u1 = layers.Concatenate()([u1, c1])
-    c6 = conv_block(u1, 32)
+    c8 = conv_block(u1, base_filters)
 
-    outputs = layers.Conv2D(1, 1, activation='sigmoid')(c6)
+    outputs = layers.Conv2D(1, 1, activation='sigmoid')(c8)
 
-    model = models.Model(inputs, outputs)
-    return model
+    return models.Model(inputs, outputs)
+
