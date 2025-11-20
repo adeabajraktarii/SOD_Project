@@ -55,7 +55,7 @@ def train_model(train_imgs, train_masks, val_imgs, val_masks, save_path, resume=
         tf.keras.callbacks.TensorBoard(log_dir="/content/drive/MyDrive/SOD_Project/logs")
     ]
 
-    history = model.fit(train_ds, validation_data=val_ds, epochs=30, callbacks=callbacks)
+    history = model.fit(train_ds, validation_data=val_ds, epochs=25, callbacks=callbacks)
     return model, history
 
 
